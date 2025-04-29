@@ -12,7 +12,11 @@ app = FastAPI(
 
 ROUTER_PACKAGE = "app.routers"
 
-origins = ["http://localhost:5173"]
+origins = [
+    "http://localhost:5173",  # Keep this for local development
+    "https://xutil.in",       # Add your production domain
+    "https://www.xutil.in",   # Add the www subdomain
+]
 
 app.add_middleware(
     CORSMiddleware,
