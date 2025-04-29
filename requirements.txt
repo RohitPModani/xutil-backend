@@ -1,0 +1,12 @@
+backend==0.2.4.1
+base58==2.1.1
+fastapi==0.115.12
+ijson==3.3.0
+pandas==2.2.3
+pydantic==2.11.3
+python_jose==3.4.0
+PyYAML==6.0.2
+PyYAML==6.0.2
+ulid_py==1.1.0
+uvicorn==0.34.2
+xmltodict==0.14.2
