@@ -1,7 +1,7 @@
 from urllib.parse import quote, unquote
 from fastapi import HTTPException
 
-def encode_url_logic(text: str, safe: str = "/") -> dict:
+def encode_url_logic(text: str) -> dict:
     """
     Encode a URL string with customizable safe characters.
     
@@ -19,7 +19,7 @@ def encode_url_logic(text: str, safe: str = "/") -> dict:
         raise HTTPException(status_code=400, detail="Input text cannot be empty")
     
     try:
-        encoded = quote(text, safe=safe)
+        encoded = quote(text, '')
         return {"original_text": text, "encoded_text": encoded}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Encoding failed: {str(e)}")

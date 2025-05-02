@@ -7,9 +7,8 @@ router = APIRouter(prefix="/url", tags=["URL Encoder/Decoder"])
 @router.get("/encode", response_model=URLEncodeResponse)
 def encode_url(
     text: str = Query(..., description="The text or URL to encode", min_length=1),
-    safe: str = Query("/", description="Characters to exclude from encoding")
 ):
-    return encode_url_logic(text, safe)
+    return encode_url_logic(text)
 
 @router.get("/decode", response_model=URLDecodeResponse)
 def decode_url(

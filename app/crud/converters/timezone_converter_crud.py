@@ -16,7 +16,7 @@ def convert_timezone_logic(request: TimezoneRequest) -> dict:
             return {"error": "Non-existent time (DST transition). Please specify a valid time."}
         target_dt = localized_dt.astimezone(to_tz)
         return {
-            "result": target_dt.strftime("%Y-%m-%d %H:%M:%S %Z%z")
+            "result": target_dt.strftime("%Y-%m-%d %H:%M:%S %Z"),
         }
     except Exception as e:
         return {"error": str(e)}
