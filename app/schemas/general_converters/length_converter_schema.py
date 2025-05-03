@@ -2,6 +2,7 @@ from typing import Dict
 from pydantic import BaseModel, Field
 from pydantic import field_validator
 from types import MappingProxyType
+from app.schemas.general_converters.schema_validators import validate_positive_value, validate_unit
 
 # Immutable dictionary for length unit conversions to meters
 UNIT_TO_METERS: Dict[str, float] = MappingProxyType({
@@ -17,25 +18,11 @@ UNIT_TO_METERS: Dict[str, float] = MappingProxyType({
 })
 
 class LengthConvertRequest(BaseModel):
-    value: float = Field(..., description="Length value to convert", gt=0)
-    unit: str = Field(..., description="Length unit (mm, cm, m, km, inch, ft, yd, mi, nm)")
+    value: float = Field(1, description="Length value to convert", gt=0)
+    unit: str = Field('m', description="Length unit (mm, cm, m, km, inch, ft, yd, mi, nm)")
 
-    @field_validator("unit")
-    @classmethod
-    def validate_unit(cls, value: str) -> str:
-        """Validate length unit."""
-        normalized = value.lower()
-        if normalized not in UNIT_TO_METERS:
-            raise ValueError(f"Invalid unit: {value}. Supported units: {list(UNIT_TO_METERS.keys())}")
-        return normalized
-
-    @field_validator("value")
-    @classmethod
-    def validate_length(cls, value: float, info) -> float:
-        """Validate length value is positive."""
-        if value <= 0:
-            raise ValueError("Length must be greater than zero")
-        return value
+    _validate_unit = field_validator("unit")(validate_unit(UNIT_TO_METERS))
+    _validate_value = field_validator("value")(validate_positive_value)
 
 class LengthConvertResponse(BaseModel):
     mm: float = Field(..., description="Length in millimeters")

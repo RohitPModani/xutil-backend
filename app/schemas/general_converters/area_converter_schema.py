@@ -2,6 +2,7 @@ from typing import Dict
 from pydantic import BaseModel, Field
 from pydantic import field_validator
 from types import MappingProxyType
+from app.schemas.general_converters.schema_validators import validate_positive_value, validate_unit
 
 # Immutable dictionary for area unit conversions (to square meters)
 UNIT_TO_SQUARE_METERS: Dict[str, float] = MappingProxyType({
@@ -14,25 +15,11 @@ UNIT_TO_SQUARE_METERS: Dict[str, float] = MappingProxyType({
 })
 
 class AreaConvertRequest(BaseModel):
-    value: float = Field(..., description="Area value to convert")
-    unit: str = Field(..., description="Area unit (m2, km2, ft2, yd2, acre, hectare)")
-
-    @field_validator("unit")
-    @classmethod
-    def validate_unit(cls, value: str) -> str:
-        """Validate area unit."""
-        normalized = value.lower()
-        if normalized not in UNIT_TO_SQUARE_METERS:
-            raise ValueError(f"Invalid unit: {value}. Supported units: {list(UNIT_TO_SQUARE_METERS.keys())}")
-        return normalized
-
-    @field_validator("value")
-    @classmethod
-    def validate_area(cls, value: float) -> float:
-        """Validate area value is non-negative."""
-        if value < 0:
-            raise ValueError("Area cannot be negative")
-        return value
+    value: float = Field(1, description="Area value to convert")
+    unit: str = Field('m2', description="Area unit (m2, km2, ft2, yd2, acre, hectare)")
+    
+    _validate_unit = field_validator("unit")(validate_unit(UNIT_TO_SQUARE_METERS))
+    _validate_value = field_validator("value")(validate_positive_value)
 
 class AreaConvertResponse(BaseModel):
     m2: float = Field(..., description="Area in square meters")

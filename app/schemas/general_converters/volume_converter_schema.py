@@ -2,6 +2,7 @@ from typing import Dict
 from pydantic import BaseModel, Field
 from pydantic import field_validator
 from types import MappingProxyType
+from app.schemas.general_converters.schema_validators import validate_positive_value, validate_unit
 
 # Immutable dictionary for volume unit conversions to liters
 UNIT_TO_LITERS: Dict[str, float] = MappingProxyType({
@@ -18,25 +19,11 @@ UNIT_TO_LITERS: Dict[str, float] = MappingProxyType({
 })
 
 class VolumeConvertRequest(BaseModel):
-    value: float = Field(..., description="Volume value to convert", gt=0)
-    unit: str = Field(..., description="Volume unit (m3, cm3, l, ml, ft3, in3, gal, qt, pt, fl_oz)")
+    value: float = Field(1, description="Volume value to convert", gt=0)
+    unit: str = Field('l', description="Volume unit (m3, cm3, l, ml, ft3, in3, gal, qt, pt, fl_oz)")
 
-    @field_validator("unit")
-    @classmethod
-    def validate_unit(cls, value: str) -> str:
-        """Validate volume unit."""
-        normalized = value.lower()
-        if normalized not in UNIT_TO_LITERS:
-            raise ValueError(f"Invalid unit: {value}. Supported units: {list(UNIT_TO_LITERS.keys())}")
-        return normalized
-
-    @field_validator("value")
-    @classmethod
-    def validate_volume(cls, value: float, info) -> float:
-        """Validate volume value is positive."""
-        if value <= 0:
-            raise ValueError("Volume must be greater than zero")
-        return value
+    _validate_unit = field_validator("unit")(validate_unit(UNIT_TO_LITERS))
+    _validate_value = field_validator("value")(validate_positive_value)
 
 class VolumeConvertResponse(BaseModel):
     m3: float = Field(..., description="Volume in cubic meters")

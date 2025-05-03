@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from pydantic import field_validator
 from types import MappingProxyType
 import math
+from app.schemas.general_converters.schema_validators import validate_unit, validate_finite_value
 
 # Immutable dictionary for bit/byte unit conversions (relative to bits, using binary prefixes)
 UNIT_TO_BITS: Dict[str, float] = MappingProxyType({
@@ -21,26 +22,11 @@ UNIT_TO_BITS: Dict[str, float] = MappingProxyType({
 })
 
 class BitByteConvertRequest(BaseModel):
-    value: float = Field(..., description="Data storage value to convert")
-    unit: str = Field(..., description="Data storage unit (Bit, Byte, Kb, KB, Mb, MB, Gb, GB, Tb, TB, Pb, PB)")
+    value: float = Field(1, description="Data storage value to convert")
+    unit: str = Field('Bit', description="Data storage unit (Bit, Byte, Kb, KB, Mb, MB, Gb, GB, Tb, TB, Pb, PB)")
 
-    @field_validator("unit")
-    @classmethod
-    def validate_unit(cls, value: str) -> str:
-        """Validate that the unit is supported."""
-        if value not in UNIT_TO_BITS:
-            raise ValueError(f"Invalid unit: {value}. Supported units: {list(UNIT_TO_BITS.keys())}")
-        return value
-
-    @field_validator("value")
-    @classmethod
-    def validate_value(cls, value: float) -> float:
-        """Validate that the value is non-negative and finite."""
-        if not math.isfinite(value):
-            raise ValueError("Value must be a finite number (not NaN or infinity)")
-        if value < 0:
-            raise ValueError("Data storage value cannot be negative")
-        return value
+    _validate_unit = field_validator("unit")(validate_unit(UNIT_TO_BITS))
+    _validate_value = field_validator("value")(validate_finite_value)
 
 class BitByteConvertResponse(BaseModel):
     Bit: float = Field(..., description="Value in bits")

@@ -1,6 +1,7 @@
 from typing import Dict
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from types import MappingProxyType
+from app.schemas.general_converters.schema_validators import validate_positive_value, validate_unit
 
 # Immutable dictionary for time unit conversions
 UNIT_TO_SECONDS: Dict[str, float] = MappingProxyType({
@@ -21,6 +22,9 @@ UNIT_TO_SECONDS: Dict[str, float] = MappingProxyType({
 class TimeConvertRequest(BaseModel):
     value: float
     unit: str
+
+    _validate_unit = field_validator("unit")(validate_unit(UNIT_TO_SECONDS))
+    _validate_value = field_validator("value")(validate_positive_value)
 
 class TimeConvertResponse(BaseModel):
     ns: float

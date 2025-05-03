@@ -2,6 +2,7 @@ from typing import Dict
 from pydantic import BaseModel, Field
 from pydantic import field_validator
 from types import MappingProxyType
+from app.schemas.general_converters.schema_validators import validate_positive_value, validate_unit
 
 # Immutable dictionary for energy unit conversions to joules
 UNIT_TO_JOULES: Dict[str, float] = MappingProxyType({
@@ -16,25 +17,11 @@ UNIT_TO_JOULES: Dict[str, float] = MappingProxyType({
 })
 
 class EnergyConvertRequest(BaseModel):
-    value: float = Field(..., description="Energy value to convert", gt=0)
-    unit: str = Field(..., description="Energy unit (j, kj, cal, kcal, wh, kwh, ev, btu)")
+    value: float = Field(1, description="Energy value to convert", gt=0)
+    unit: str = Field('j', description="Energy unit (j, kj, cal, kcal, wh, kwh, ev, btu)")
 
-    @field_validator("unit")
-    @classmethod
-    def validate_unit(cls, value: str) -> str:
-        """Validate energy unit."""
-        normalized = value.lower()
-        if normalized not in UNIT_TO_JOULES:
-            raise ValueError(f"Invalid unit: {value}. Supported units: {list(UNIT_TO_JOULES.keys())}")
-        return normalized
-
-    @field_validator("value")
-    @classmethod
-    def validate_energy(cls, value: float, info) -> float:
-        """Validate energy value is positive."""
-        if value <= 0:
-            raise ValueError("Energy must be greater than zero")
-        return value
+    _validate_unit = field_validator("unit")(validate_unit(UNIT_TO_JOULES))
+    _validate_value = field_validator("value")(validate_positive_value)
 
 class EnergyConvertResponse(BaseModel):
     j: float = Field(..., description="Energy in joules")
