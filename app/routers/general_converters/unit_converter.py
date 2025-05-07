@@ -13,7 +13,7 @@ from ...schemas.general_converters.temperature_converter_schema import Temperatu
 from ...schemas.general_converters.time_converter_scehma import TimeConvertRequest, TimeConvertResponse, UNIT_TO_SECONDS
 from ...schemas.general_converters.volume_converter_schema import VolumeConvertRequest, VolumeConvertResponse, UNIT_TO_LITERS
 from ...schemas.general_converters.weight_converter_schema import WeightConvertRequest, WeightConvertResponse, UNIT_TO_GRAMS
-from ...crud.general_converters.unit_converter_crud import convert_unit_logic
+from ...crud.general_converters.unit_converter_crud import convert_temperature_logic, convert_unit_logic
 
 router = APIRouter(prefix="/unit-converter", tags=["General Converters"])
 
@@ -237,7 +237,7 @@ async def convert_temperature(data: TemperatureConvertRequest) -> TemperatureCon
         HTTPException: If input validation fails (invalid unit or temperature value)
     """
     try:
-        return convert_unit_logic(data=data, conversion_dict=TEMPERATURE_UNITS, response_class=TemperatureConvertResponse)
+        return convert_temperature_logic(data=data)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:

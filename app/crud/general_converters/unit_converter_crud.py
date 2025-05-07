@@ -2,6 +2,8 @@ from fastapi import HTTPException
 from typing import TypeVar, Type, Dict, Any
 import math
 
+from app.schemas.general_converters.temperature_converter_schema import TemperatureConvertRequest, TemperatureConvertResponse
+
 # Generic type variables for request and response schemas
 RequestT = TypeVar("RequestT")
 ResponseT = TypeVar("ResponseT")
@@ -58,6 +60,65 @@ def convert_unit_logic(
         }
 
         return response_class(**converted_values)
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Conversion error: {str(e)}")
+    except OverflowError:
+        raise HTTPException(status_code=400, detail="Value too large for conversion")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error during conversion: {str(e)}")
+    
+def convert_temperature_logic(data: TemperatureConvertRequest) -> TemperatureConvertResponse:
+    """
+    Convert temperature between Celsius, Fahrenheit, and Kelvin.
+
+    Args:
+        data: Validated request object with unit and value
+
+    Returns:
+        TemperatureConvertResponse with converted values in all units
+
+    Raises:
+        HTTPException:
+            - 400: If value causes numerical errors or conversion fails
+            - 500: If unexpected errors occur during conversion
+    """
+    try:
+        unit = data.unit
+        value = data.value
+
+        # Validate value for numerical stability
+        if not math.isfinite(value):
+            raise ValueError("Value must be a finite number (not NaN or infinity)")
+
+        # Convert to Celsius as an intermediate step, then to other units
+        if unit == "celsius":
+            celsius = value
+        elif unit == "fahrenheit":
+            celsius = (value - 32) * 5 / 9
+        elif unit == "kelvin":
+            celsius = value - 273.15
+        else:
+            raise ValueError(f"Invalid unit: {unit}")
+
+        # Check for numerical stability of intermediate value
+        if not math.isfinite(celsius):
+            raise ValueError("Conversion resulted in non-finite value (possible overflow)")
+
+        # Convert to other units
+        fahrenheit = celsius * 9 / 5 + 32
+        kelvin = celsius + 273.15
+
+        # Round to 8 decimal places
+        celsius = round(celsius, 8)
+        fahrenheit = round(fahrenheit, 8)
+        kelvin = round(kelvin, 8)
+
+        return TemperatureConvertResponse(
+            celsius=celsius,
+            fahrenheit=fahrenheit,
+            kelvin=kelvin
+        )
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=f"Conversion error: {str(e)}")
